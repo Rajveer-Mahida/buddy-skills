@@ -91,7 +91,7 @@ function cmdInit(args) {
   }
 
   const existing = readState();
-  if (existing && existing.status === 'running') {
+  if (existing && existing.status === 'running' && !args.force) {
     console.log(
       JSON.stringify({
         action: 'resumed',
@@ -105,6 +105,8 @@ function cmdInit(args) {
   const state = {
     run_id: id(),
     task,
+    linear_issue_id: args['issue-id'] || null,
+    branch: args.branch || null,
     status: 'running',
     current_step: 'analyzer',
     iteration: 1,
@@ -120,7 +122,7 @@ function cmdInit(args) {
   }
 
   writeState(state);
-  console.log(JSON.stringify({ action: 'initialized', run_id: state.run_id, task }));
+  console.log(JSON.stringify({ action: 'initialized', run_id: state.run_id, task, linear_issue_id: state.linear_issue_id, branch: state.branch }));
 }
 
 function cmdUpdate(args) {
@@ -245,12 +247,12 @@ const args = parseArgs(process.argv);
 const command = args._command;
 
 switch (command) {
-  case 'init':    cmdInit(args); break;
-  case 'update':  cmdUpdate(args); break;
-  case 'get':     cmdGet(args); break;
-  case 'resume':  cmdResume(args); break;
+  case 'init': cmdInit(args); break;
+  case 'update': cmdUpdate(args); break;
+  case 'get': cmdGet(args); break;
+  case 'resume': cmdResume(args); break;
   case 'complete': cmdComplete(); break;
-  case 'fail':    cmdFail(args); break;
+  case 'fail': cmdFail(args); break;
   default:
     console.error(`Unknown command: ${command || '(none)'}`);
     console.error('Available: init | update | get | resume | complete | fail');

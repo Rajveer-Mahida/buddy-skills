@@ -1,0 +1,54 @@
+{
+  "run_id": "run_f5d53409",
+  "task": "Add user authentication",
+  "linear_issue_id": "LIN-42",
+  "branch": "linear/LIN-42",
+  "status": "running",
+  "current_step": "researcher",
+  "iteration": 1,
+  "max_iterations": 10,
+  "started_at": "2026-03-07T14:02:00.957Z",
+  "updated_at": "2026-03-07T14:16:39.674Z",
+  "steps": {
+    "analyzer": {
+      "status": "done",
+      "output": null,
+      "updated_at": "2026-03-07T14:16:39.297Z"
+    },
+    "prompt-enhancer": {
+      "status": "done",
+      "output": null,
+      "updated_at": "2026-03-07T14:16:39.672Z"
+    },
+    "researcher": {
+      "status": "pending",
+      "output": null,
+      "updated_at": null
+    },
+    "planner": {
+      "status": "pending",
+      "output": null,
+      "updated_at": null
+    },
+    "plan-reviewer": {
+      "status": "pending",
+      "output": null,
+      "updated_at": null
+    },
+    "developer": {
+      "status": "pending",
+      "output": null,
+      "updated_at": null
+    },
+    "tester": {
+      "status": "pending",
+      "output": null,
+      "updated_at": null
+    },
+    "code-reviewer": {
+      "status": "pending",
+      "output": null,
+      "updated_at": null
+    }
+  }
+}

@@ -11,7 +11,7 @@ This guide covers how to configure each MCP server for use with the Buddy orches
 
 ### Linear MCP
 
-Used by: Buddy main SKILL.md (task listing), Analyzer (reading task details)
+Used by: `agents/linear-reader/SKILL.md` (task listing + details)
 
 **Setup:**
 
@@ -20,17 +20,28 @@ Used by: Buddy main SKILL.md (task listing), Analyzer (reading task details)
    ```
    LINEAR_API_KEY=lin_api_xxxxxxxxxxxx
    ```
-3. Install the Linear MCP server in your agent's MCP config
+3. Add to your agent's MCP config (e.g. `.agent/settings.json` or equivalent):
+   ```json
+   {
+     "mcpServers": {
+       "linear": {
+         "command": "npx",
+         "args": ["-y", "@anthropic/linear-mcp"],
+         "env": { "LINEAR_API_KEY": "${LINEAR_API_KEY}" }
+       }
+     }
+   }
+   ```
 
-**Capabilities used by Buddy:**
+**Key MCP tools used by Buddy:**
 
-- List issues assigned to the user
-- Read issue title, description, priority, labels, comments
-- Update issue status (in progress, done)
+- `listIssues` — filter by assignee, team, status
+- `getIssue` — full issue details (description, comments, labels)
+- `updateIssue` — set status to "In Progress"
 
 ### GitHub MCP
 
-Used by: Developer agent (branch/commit), Buddy (PR creation)
+Used by: Main SKILL.md Step 9 (PR creation)
 
 **Setup:**
 
@@ -39,14 +50,25 @@ Used by: Developer agent (branch/commit), Buddy (PR creation)
    ```
    GITHUB_TOKEN=ghp_xxxxxxxxxxxx
    ```
-3. Install the GitHub MCP server in your agent's MCP config
+3. Add to your agent's MCP config:
+   ```json
+   {
+     "mcpServers": {
+       "github": {
+         "command": "npx",
+         "args": ["-y", "@anthropic/github-mcp"],
+         "env": { "GITHUB_TOKEN": "${GITHUB_TOKEN}" }
+       }
+     }
+   }
+   ```
 
-**Capabilities used by Buddy:**
+**Key MCP tools used by Buddy:**
 
-- Create branches from `dev`
-- Create pull requests targeting `dev`
-- Add PR descriptions generated from the run summary
-- Check if branch `linear/{issue-id}` already exists
+- `createPullRequest` — create PR from `linear/{issue-id}` to `dev`
+- `listBranches` — check if branch already exists remotely
+
+> **Note:** Git branch/commit/push operations are handled by `scripts/git-ops.js` directly (not MCP). GitHub MCP is only used for PR creation.
 
 ### Memory MCP
 

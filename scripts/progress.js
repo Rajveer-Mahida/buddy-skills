@@ -81,6 +81,12 @@ function printBanner(state) {
     console.log(color(`\n${line}`, c.gray));
     console.log(`  ${color('🤖 BUDDY', c.bold + c.cyan)} ${color(`Run: ${state.run_id}`, c.gray)}`);
     console.log(`  ${color('Task:', c.bold)} ${state.task}`);
+    if (state.linear_issue_id || state.branch) {
+        const parts = [];
+        if (state.linear_issue_id) parts.push(`${color('Issue:', c.gray)} ${color(state.linear_issue_id, c.yellow)}`);
+        if (state.branch) parts.push(`${color('Branch:', c.gray)} ${color(state.branch, c.cyan)}`);
+        console.log(`  ${parts.join(`  ${color('│', c.gray)}  `)}`);
+    }
     console.log(color(`${line}\n`, c.gray));
 }
 

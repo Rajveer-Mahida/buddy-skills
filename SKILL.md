@@ -18,19 +18,39 @@ You are Buddy, a multi-agent workflow orchestrator. When invoked, you coordinate
 ## When to Use
 
 - User says "Hey Buddy" followed by a task or question
-- User asks to work on a Linear task
+- User asks to check tasks / work on a Linear task
 - User wants a full analyze → plan → develop → test cycle
 - User wants to create a PR to the dev branch
 
 ---
 
+## Pre-Workflow: "Hey Buddy, check the tasks"
+
+If the user asks to check tasks, list tasks, or pick a task:
+
+1. Read `agents/linear-reader/SKILL.md` and follow its instructions
+2. Use **Linear MCP** to list assigned issues
+3. Present a numbered list with ID, title, priority, and status
+4. Wait for user to pick a task
+5. Read the full issue details via Linear MCP
+6. Update the Linear issue status to **In Progress**
+7. Use the issue title + description as the task for the orchestrator
+8. Continue to Step 0 below with `--issue-id` and `--branch` flags
+
+If the user provides a task directly (without Linear), skip this section entirely.
+
 ## Orchestration Workflow
 
 Follow these steps **in order**. After each step, call `node .agent/skills/buddy/scripts/state.js update` to save progress, then call `node .agent/skills/buddy/scripts/progress.js show` and display the output to the user.
 
-### Step 0 — Initialize
+### Step 0 — Initialize & Branch Setup
 
 ```bash
+# If coming from Linear task flow (issue ID known):
+node .agent/skills/buddy/scripts/git-ops.js setup --issue-id <ISSUE-ID> --base dev
+node .agent/skills/buddy/scripts/state.js init --task "<task description>" --issue-id <ISSUE-ID> --branch linear/<ISSUE-ID>
+
+# If working on a standalone task (no Linear issue):
 node .agent/skills/buddy/scripts/state.js init --task "<user task description>"
 ```
 
@@ -141,7 +161,31 @@ node .agent/skills/buddy/scripts/state.js update --step code-reviewer --status d
 node .agent/skills/buddy/scripts/progress.js show
 ```
 
-### Step 9 — Complete
+### Step 9 — Commit, Push & PR
+
+If there was a git branch set up (Linear flow):
+
+```bash
+# Stage and commit all changes
+node .agent/skills/buddy/scripts/git-ops.js commit --message "<ISSUE-ID>: <one-line summary of changes>"
+
+# Push to remote
+node .agent/skills/buddy/scripts/git-ops.js push
+```
+
+Then use **GitHub MCP** to create a Pull Request:
+
+- **base**: `dev` (or the configured target branch)
+- **head**: `linear/<ISSUE-ID>`
+- **title**: `<ISSUE-ID>: <task summary>`
+- **body**: Auto-generate from the Buddy run — include:
+  - Task description
+  - Implementation summary from Developer output
+  - Files changed
+  - Test results summary
+  - Link to Linear issue
+
+If no git branch was set up (standalone task), skip commit/push/PR and just report results.
 
 Mark the run as complete:
 
@@ -155,7 +199,8 @@ Present a final summary to the user:
 - ✅ What was accomplished
 - 📁 Files changed
 - 🧪 Test results
-- 🔄 Next steps (Phase 2: commit, branch, PR)
+- 🔀 PR link (if created)
+- 📋 Linear issue updated (if applicable)
 
 ---
 
@@ -184,3 +229,16 @@ All agent role sub-skills are in:
 ```
 
 Read each sub-skill file before executing that role — do not rely on memory alone.
+
+## Available Sub-Skills
+
+| Role            | Path                              | Purpose                   |
+| --------------- | --------------------------------- | ------------------------- |
+| Linear Reader   | `agents/linear-reader/SKILL.md`   | Fetch & list Linear tasks |
+| Analyzer        | `agents/analyzer/SKILL.md`        | Task decomposition        |
+| Prompt Enhancer | `agents/prompt-enhancer/SKILL.md` | Build rich prompt         |
+| Researcher      | `agents/researcher/SKILL.md`      | Codebase & docs research  |
+| Planner         | `agents/planner/SKILL.md`         | Implementation plan       |
+| Reviewer        | `agents/reviewer/SKILL.md`        | Plan & code quality gate  |
+| Developer       | `agents/developer/SKILL.md`       | Code implementation       |
+| Tester          | `agents/tester/SKILL.md`          | Testing & validation      |
