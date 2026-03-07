@@ -1,0 +1,19 @@
+{
+  "name": "buddy-orchestrator",
+  "version": "1.0.0",
+  "description": "Multi-agent workflow orchestrator for software projects — runs as an Agent Skill",
+  "type": "commonjs",
+  "scripts": {
+    "check-env": "node scripts/check-env.js",
+    "install-skill": "node scripts/install-skill.js",
+    "install-all": "node scripts/install-skill.js --agent all --scope both",
+    "install-project": "node scripts/install-skill.js --agent all --scope project",
+    "state": "node scripts/state.js",
+    "progress": "node scripts/progress.js show"
+  },
+  "keywords": ["agent-skills", "multi-agent", "orchestrator", "ai", "workflow", "buddy"],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
