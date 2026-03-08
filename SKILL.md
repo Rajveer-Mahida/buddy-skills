@@ -45,13 +45,23 @@ Follow these steps **in order**. After each step, call `node .agent/skills/buddy
 
 ### Step 0 — Initialize & Branch Setup
 
+Read `agents/git-agent/SKILL.md` and execute the Git Agent role:
+
+- Call the agent to initialize a new local git branch (either `linear/<ISSUE-ID>` or a generated name) and check it out.
+
 ```bash
+# Call the state init first to begin tracking:
 # If coming from Linear task flow (issue ID known):
-node .agent/skills/buddy/scripts/git-ops.js setup --issue-id <ISSUE-ID> --base dev
 node .agent/skills/buddy/scripts/state.js init --task "<task description>" --issue-id <ISSUE-ID> --branch linear/<ISSUE-ID>
 
 # If working on a standalone task (no Linear issue):
-node .agent/skills/buddy/scripts/state.js init --task "<user task description>"
+node .agent/skills/buddy/scripts/state.js init --task "<user task description>" --branch buddy/<task-summary>
+```
+
+```bash
+# Then update the Git Agent step:
+node .agent/skills/buddy/scripts/state.js update --step git-agent --status done --output '<branch checkout json>'
+node .agent/skills/buddy/scripts/progress.js show
 ```
 
 Show the ASCII banner from `assets/buddy-banner.txt` to the user, then display the initial progress table.
@@ -161,31 +171,29 @@ node .agent/skills/buddy/scripts/state.js update --step code-reviewer --status d
 node .agent/skills/buddy/scripts/progress.js show
 ```
 
-### Step 9 — Commit, Push & PR
+### Step 9 — Lint & Auto-Fix
 
-If there was a git branch set up (Linear flow):
+Read `agents/git-agent/SKILL.md` and execute the Git Agent role for linting:
+
+- Run the project's linter (e.g., `npx eslint . --fix`).
+- If linting fails with unfixable errors: mark as `needs-revision`, return to Step 6 (Developer) with the linter output.
+- If linting passes or was auto-fixed successfully: mark as `approved`.
 
 ```bash
-# Stage and commit all changes
-node .agent/skills/buddy/scripts/git-ops.js commit --message "<ISSUE-ID>: <one-line summary of changes>"
-
-# Push to remote
-node .agent/skills/buddy/scripts/git-ops.js push
+node .agent/skills/buddy/scripts/state.js update --step git-agent-lint --status done --output '<lint results json>'
+node .agent/skills/buddy/scripts/progress.js show
 ```
 
-Then use **GitHub MCP** to create a Pull Request:
+### Step 10 — Commit, Push & PR
 
-- **base**: `dev` (or the configured target branch)
-- **head**: `linear/<ISSUE-ID>`
-- **title**: `<ISSUE-ID>: <task summary>`
-- **body**: Auto-generate from the Buddy run — include:
-  - Task description
-  - Implementation summary from Developer output
-  - Files changed
-  - Test results summary
-  - Link to Linear issue
+Read `agents/git-agent/SKILL.md` and execute the Git Agent role for finishing the task:
 
-If no git branch was set up (standalone task), skip commit/push/PR and just report results.
+- Stage, commit, and push all changes for the current branch.
+- Use **GitHub MCP** to create a Pull Request to `dev`.
+
+```bash
+node .agent/skills/buddy/scripts/state.js update --step git-agent-pr --status done --output '<pr link and summary json>'
+```
 
 Mark the run as complete:
 
@@ -199,7 +207,7 @@ Present a final summary to the user:
 - ✅ What was accomplished
 - 📁 Files changed
 - 🧪 Test results
-- 🔀 PR link (if created)
+- 🔀 PR link
 - 📋 Linear issue updated (if applicable)
 
 ---
@@ -242,3 +250,4 @@ Read each sub-skill file before executing that role — do not rely on memory al
 | Reviewer        | `agents/reviewer/SKILL.md`        | Plan & code quality gate  |
 | Developer       | `agents/developer/SKILL.md`       | Code implementation       |
 | Tester          | `agents/tester/SKILL.md`          | Testing & validation      |
+| Git Agent       | `agents/git-agent/SKILL.md`       | Branching, Linting & PRs  |
