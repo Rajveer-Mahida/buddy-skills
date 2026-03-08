@@ -86,7 +86,19 @@ Used by: Tester agent (UI/frontend tasks)
 
 **When Buddy uses it:** If `task_type` is `frontend` or `fullstack` and `playwright` is in `mcps_needed`.
 
-**Setup:** Install `@playwright/mcp` and configure in your agent.
+**Setup:**
+
+Add to your agent's MCP config:
+```json
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@browserbasehq/mcp-server-playwright"]
+    }
+  }
+}
+```
 
 ### HTTP MCP
 
@@ -94,17 +106,65 @@ Used by: Tester agent (API endpoint testing)
 
 **When Buddy uses it:** If `task_type` is `backend` or `fullstack` and `http` is in `mcps_needed`.
 
+**Setup:**
+
+Add to your agent's MCP config:
+```json
+{
+  "mcpServers": {
+    "http": {
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-server-http"]
+    }
+  }
+}
+```
+
 ### Bash MCP
 
 Used by: Tester agent (running test commands)
 
-**When Buddy uses it:** Always available for running `npm test`, `pytest`, etc.
+**When Buddy uses it:** Always available for running `npm test`, `pytest`, etc. securely inside an agent environment without granting direct shell access blindly.
+
+**Setup:**
+
+Add to your agent's MCP config:
+```json
+{
+  "mcpServers": {
+    "bash": {
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-server-bash"]
+    }
+  }
+}
+```
 
 ### Web Search MCP
 
 Used by: Researcher agent (unfamiliar technologies)
 
 **When Buddy uses it:** If `web-search` is in `mcps_needed` from the Analyzer output.
+
+**Setup:**
+
+1. Get a Brave Search API key (or similar supported search MCP).
+2. Add to your project `.env`:
+   ```
+   BRAVE_API_KEY=xxxxxxxxxxxx
+   ```
+3. Add to your agent's MCP config:
+   ```json
+   {
+     "mcpServers": {
+       "brave-search": {
+         "command": "npx",
+         "args": ["-y", "@anthropic/mcp-server-brave-search"],
+         "env": { "BRAVE_API_KEY": "${BRAVE_API_KEY}" }
+       }
+     }
+   }
+   ```
 
 ### Slack MCP
 

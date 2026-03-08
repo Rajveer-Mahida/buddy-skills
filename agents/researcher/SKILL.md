@@ -38,11 +38,14 @@ Also investigate:
 
 ### 3. External Research (if web-search MCP available)
 
-For unfamiliar technologies or libraries identified by the Analyzer:
+If `web-search` is in `mcps_needed` from the Analyzer output, actively utilize the Web Search (e.g., Brave) MCP tools.
 
-- Search for best practices and common patterns
-- Look for known gotchas or migration guides
-- Check if there are breaking changes in the versions being used
+For unfamiliar technologies, newly released libraries, or third-party API payloads identified for the task:
+
+- Proceed to use the `brave_web_search` tool (or available web search tool) with highly specific queries (e.g., `"React 19 generic forwardRef migration guide"`).
+- Review the text content or snippets provided in the results.
+- Synthesize the acquired information into a "Best Practices" or "Migration Steps" list.
+- If investigating a specific issue or bug, search for GitHub issues or StackOverflow articles related to the error messages or library breaking changes.
 
 ### 4. Produce Research Context Document
 

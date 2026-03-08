@@ -63,6 +63,16 @@ warn('GitHub token', () => {
     return 'GitHub token found';
 });
 
+warn('Web Search MCP (Brave)', () => {
+    if (!process.env.BRAVE_API_KEY) throw new Error('BRAVE_API_KEY not set in .env (needed for Web Search in Phase 3)');
+    return 'BRAVE_API_KEY found';
+});
+
+warn('Slack MCP', () => {
+    if (!process.env.SLACK_BOT_TOKEN) throw new Error('SLACK_BOT_TOKEN not set in .env (needed for Phase 4)');
+    return 'SLACK_BOT_TOKEN found';
+});
+
 warn('.env file', () => {
     const envFile = path.join(process.cwd(), '.env');
     if (!fs.existsSync(envFile)) throw new Error('.env file not found in project root');

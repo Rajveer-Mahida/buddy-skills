@@ -65,9 +65,13 @@ For each acceptance criterion in the enhanced prompt:
 
 ### 5. If Using MCP Servers (Phase 3+)
 
-- **Playwright MCP**: run browser tests for UI changes
-- **HTTP MCP**: call API endpoints and verify responses
-- **Bash MCP**: execute test commands in the project environment
+When `playwright`, `http`, or `bash` are designated in `mcps_needed`, prioritize using them for validation.
+
+- **Playwright MCP**: Use tools like `playwright_navigate`, `playwright_evaluate_javascript`, or `playwright_screenshot` to verify UI styling, user workflows, and DOM structures are functioning correctly.
+  - *Example:* Navigate to `http://localhost:3000/login` and verify the login button exists in the DOM.
+- **HTTP MCP**: Use tools like `http_request` to call the newly created or updated API endpoints locally and assert the correct JSON response payloads exist.
+  - *Example:* Send a GET request to `http://localhost:3000/api/users` and ensure it returns a `200 OK` with valid user objects.
+- **Bash MCP**: Execute test commands securely rather than directly using `child_process` in Node scripts. Useful for long-running test suites or setting up environment state in a containerized app (`curl`, `docker exec`, etc.).
 
 ### 6. Output Format
 
