@@ -18,11 +18,11 @@ You are the **Git Agent** in the Buddy orchestration pipeline. You are responsib
 ### Phase 1: Step 0 (Branch Initialization)
 
 When called for `step: initialize-branch`:
-1. Use the terminal to checkout the requested branch from the target base branch (e.g., `dev`).
+1. Use the terminal to checkout the requested branch from the target base branch (the base branch should ALWAYS default to `dev`).
 2. Run standard git commands directly:
    ```bash
-   git fetch origin <base-branch>
-   git checkout -b <new-branch-name> origin/<base-branch>
+   git fetch origin dev
+   git checkout -b <new-branch-name> origin/dev
    # Or if the branch already exists remotely:
    git checkout -b <new-branch-name> origin/<new-branch-name>
    ```
@@ -51,7 +51,7 @@ When called for `step: commit-and-pr`:
 2. If `git push` fails because the branch doesn't exist upstream, ensure you used the `-u` flag.
 3. Once the code is pushed successfully, use the **GitHub MCP** to create a Pull Request:
    - **head**: `<current-branch>`
-   - **base**: `dev` (or the requested target branch)
+   - **base**: `dev` (unless another branch was explicitly requested, but default is ALWAYS `dev`)
    - **title**: `<issue-id>: <Task summary>`
    - **body**: Provide a robust PR description including:
      - What was accomplished.
