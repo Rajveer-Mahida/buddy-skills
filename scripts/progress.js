@@ -13,14 +13,19 @@ const path = require('path');
 const STATE_FILE = path.join(process.cwd(), '.buddy', 'state.json');
 
 const STEP_LABELS = {
+    'initialize-branch': 'Initialize Branch',
     'analyzer': 'Analyze Task',
     'prompt-enhancer': 'Enhance Prompt',
     'researcher': 'Research',
     'planner': 'Plan',
-    'plan-reviewer': 'Review Plan',
+    'plan-verifier': 'Verify Plan',
     'developer': 'Develop',
-    'tester': 'Test',
+    'verifier': 'Verify Code',
     'code-reviewer': 'Review Code',
+    'integration-checker': 'Check Integration',
+    'tester': 'Test',
+    'lint-and-fix': 'Lint & Fix',
+    'git-agent': 'Git & PR',
 };
 
 const STATUS_ICON = {
@@ -156,6 +161,70 @@ function printProgress(state) {
     console.log('');
 }
 
+// ── Task Progress ────────────────────────────────────────────────────────────────
+function printTaskProgress(state) {
+    if (!state.tasks || Object.keys(state.tasks).length === 0) {
+        return;
+    }
+
+    const taskIds = Object.keys(state.tasks).sort();
+    const completedCount = Object.values(state.tasks).filter(t => t.status === 'done').length;
+
+    console.log(color('\n  Task Progress', c.bold + c.cyan));
+    console.log(color('  ' + '─'.repeat(50), c.gray));
+
+    for (const taskId of taskIds) {
+        const task = state.tasks[taskId];
+        const status = task.status || 'pending';
+        const icon = status === 'done' ? '✅' : (status === 'in_progress' ? '🔄' : '⬚');
+
+        let taskInfo = `  ${icon} ${color(taskId, c.white)}`;
+
+        if (task.commit) {
+            taskInfo += color(` @ ${task.commit.slice(0, 7)}`, c.green + c.dim);
+        }
+
+        if (task.verification_score) {
+            const scoreColor = task.verification_score >= 7 ? c.green : c.yellow;
+            taskInfo += color(` (${task.verification_score}/10)`, scoreColor);
+        }
+
+        if (task.deviations && task.deviations.length > 0) {
+            taskInfo += color(` [${task.deviations.length} deviation(s)]`, c.yellow);
+        }
+
+        console.log(taskInfo);
+    }
+
+    // Show commits if any
+    if (state.commits && state.commits.length > 0) {
+        console.log(color(`\n  Commits: ${state.commits.length}`, c.gray));
+        for (const commit of state.commits.slice(-3)) {
+            console.log(`    ${color(commit.slice(0, 7), c.dim)}`);
+        }
+        if (state.commits.length > 3) {
+            console.log(`    ${color('...', c.dim)}`);
+        }
+    }
+
+    // Show verification summary
+    if (state.verification) {
+        const parts = [];
+        if (state.verification.plan_status) {
+            parts.push(`Plan: ${state.verification.plan_status}`);
+        }
+        if (state.verification.code_status) {
+            parts.push(`Code: ${state.verification.code_status}`);
+        }
+        if (state.verification.integration_status) {
+            parts.push(`Integration: ${state.verification.integration_status}`);
+        }
+        if (parts.length > 0) {
+            console.log(color(`\n  Verification: ${parts.join(' | ')}`, c.cyan + c.dim));
+        }
+    }
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 const command = process.argv[2];
 
@@ -179,3 +248,4 @@ try {
 
 printBanner(state);
 printProgress(state);
+printTaskProgress(state);

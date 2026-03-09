@@ -24,14 +24,19 @@ const STATE_FILE = path.join(STATE_DIR, 'state.json');
 
 // ── Steps in order ────────────────────────────────────────────────────────────
 const STEPS = [
+  'initialize-branch',
   'analyzer',
   'prompt-enhancer',
   'researcher',
   'planner',
-  'plan-reviewer',
+  'plan-verifier',      // NEW: 8-dimension plan verification
   'developer',
-  'tester',
+  'verifier',           // NEW: Goal-backward code verification
   'code-reviewer',
+  'integration-checker', // NEW: Cross-component wiring verification
+  'tester',
+  'lint-and-fix',
+  'git-agent',
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -109,11 +114,24 @@ function cmdInit(args) {
     branch: args.branch || null,
     status: 'running',
     current_step: 'analyzer',
+    current_task: null,        // NEW: Track current task within step
     iteration: 1,
     max_iterations: 10,
     started_at: now(),
     updated_at: now(),
     steps: {},
+    // NEW: Task-level tracking
+    tasks: {},
+    // NEW: Verification results
+    verification: {
+      plan_status: null,
+      code_status: null,
+      integration_status: null,
+    },
+    // NEW: Commit tracking for atomic commits
+    commits: [],
+    // NEW: Deviations tracking
+    deviations: [],
   };
 
   // Initialize all steps as pending
@@ -242,6 +260,149 @@ function cmdFail(args) {
   console.log(JSON.stringify({ action: 'failed', run_id: state.run_id, reason: state.failure_reason }));
 }
 
+// ── NEW: Task-level commands ─────────────────────────────────────────────────────
+
+function cmdBeginTask(args) {
+  const state = readState();
+  if (!state) {
+    console.error('Error: No active run.');
+    process.exit(1);
+  }
+
+  const taskId = args.task;
+  if (!taskId) {
+    console.error('Error: --task is required (e.g., task-1)');
+    process.exit(1);
+  }
+
+  state.current_task = taskId;
+  state.tasks[taskId] = state.tasks[taskId] || {
+    status: 'in_progress',
+    started_at: now(),
+    commit: null,
+    verified: null,
+    verification_score: null,
+    deviations: [],
+  };
+  state.updated_at = now();
+  writeState(state);
+
+  console.log(JSON.stringify({ action: 'task_begin', task_id: taskId }));
+}
+
+function cmdCompleteTask(args) {
+  const state = readState();
+  if (!state) {
+    console.error('Error: No active run.');
+    process.exit(1);
+  }
+
+  const taskId = args.task;
+  if (!taskId) {
+    console.error('Error: --task is required');
+    process.exit(1);
+  }
+
+  if (!state.tasks[taskId]) {
+    console.error(`Error: Task ${taskId} not found. Use begin-task first.`);
+    process.exit(1);
+  }
+
+  state.tasks[taskId].status = 'done';
+  state.tasks[taskId].completed_at = now();
+  if (args.commit) {
+    state.tasks[taskId].commit = args.commit;
+    state.commits.push(args.commit);
+  }
+  if (args.verified) {
+    state.tasks[taskId].verified = args.verified === 'true';
+  }
+  if (args.score) {
+    state.tasks[taskId].verification_score = parseInt(args.score, 10);
+  }
+  state.current_task = null;
+  state.updated_at = now();
+  writeState(state);
+
+  console.log(JSON.stringify({
+    action: 'task_complete',
+    task_id: taskId,
+    commit: state.tasks[taskId].commit,
+    verified: state.tasks[taskId].verified
+  }));
+}
+
+function cmdAddCommit(args) {
+  const state = readState();
+  if (!state) {
+    console.error('Error: No active run.');
+    process.exit(1);
+  }
+
+  const hash = args.hash;
+  if (!hash) {
+    console.error('Error: --hash is required');
+    process.exit(1);
+  }
+
+  state.commits.push(hash);
+  state.updated_at = now();
+  writeState(state);
+
+  console.log(JSON.stringify({ action: 'commit_added', hash, total: state.commits.length }));
+}
+
+function cmdAddDeviation(args) {
+  const state = readState();
+  if (!state) {
+    console.error('Error: No active run.');
+    process.exit(1);
+  }
+
+  const deviation = {
+    task: args.task || state.current_task,
+    rule: args.rule ? parseInt(args.rule, 10) : null,
+    type: args.type || 'unknown',
+    found: args.found || '',
+    fixed: args.fixed || '',
+    files: args.files ? args.files.split(',') : [],
+    timestamp: now(),
+  };
+
+  state.deviations.push(deviation);
+  if (state.current_task && state.tasks[state.current_task]) {
+    state.tasks[state.current_task].deviations.push(deviation);
+  }
+  state.updated_at = now();
+  writeState(state);
+
+  console.log(JSON.stringify({ action: 'deviation_added', deviation }));
+}
+
+function cmdUpdateVerification(args) {
+  const state = readState();
+  if (!state) {
+    console.error('Error: No active run.');
+    process.exit(1);
+  }
+
+  const type = args.type; // plan, code, or integration
+  if (!type || !['plan', 'code', 'integration'].includes(type)) {
+    console.error('Error: --type must be plan, code, or integration');
+    process.exit(1);
+  }
+
+  const key = `${type}_status`;
+  state.verification[key] = args.status || 'pending';
+  if (args.score) {
+    state.verification[`${type}_score`] = parseInt(args.score, 10);
+  }
+  state.updated_at = now();
+  writeState(state);
+
+  console.log(JSON.stringify({ action: 'verification_updated', type, status: state.verification[key] }));
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 const args = parseArgs(process.argv);
 const command = args._command;
@@ -253,8 +414,14 @@ switch (command) {
   case 'resume': cmdResume(args); break;
   case 'complete': cmdComplete(); break;
   case 'fail': cmdFail(args); break;
+  // NEW: Task-level commands
+  case 'begin-task': cmdBeginTask(args); break;
+  case 'complete-task': cmdCompleteTask(args); break;
+  case 'add-commit': cmdAddCommit(args); break;
+  case 'add-deviation': cmdAddDeviation(args); break;
+  case 'update-verification': cmdUpdateVerification(args); break;
   default:
     console.error(`Unknown command: ${command || '(none)'}`);
-    console.error('Available: init | update | get | resume | complete | fail');
+    console.error('Available: init | update | get | resume | complete | fail | begin-task | complete-task | add-commit | add-deviation | update-verification');
     process.exit(1);
 }

@@ -43,7 +43,9 @@ If the user provides a task directly (without Linear), skip this section entirel
 
 Follow these steps **in order**. After each step, call `node .agent/skills/buddy/scripts/state.js update` to save progress, then call `node .agent/skills/buddy/scripts/progress.js show` and display the output to the user.
 
-### Step 0 — Initialize & Branch Setup
+### Phase 1: Preparation
+
+#### Step 0 — Initialize & Branch Setup
 
 Read `agents/git-agent/SKILL.md` and execute the Git Agent role:
 
@@ -59,140 +61,184 @@ node .agent/skills/buddy/scripts/state.js init --task "<user task description>" 
 ```
 
 ```bash
-# Then update the Git Agent step:
-node .agent/skills/buddy/scripts/state.js update --step git-agent --status done --output '<branch checkout json>'
+# Then update the initialize-branch step:
+node .agent/skills/buddy/scripts/state.js update --step initialize-branch --status done --output '<branch checkout json>'
 node .agent/skills/buddy/scripts/progress.js show
 ```
 
-Show the ASCII banner from `assets/buddy-banner.txt` to the user, then display the initial progress table.
-
-### Step 1 — Analyze
+#### Step 1 — Analyze
 
 Read `agents/analyzer/SKILL.md` and execute the Analyzer role:
-
-- Break the task into sub-tasks
-- Classify the task type: `frontend | backend | fullstack | bugfix | feature | refactor | docs`
-- Identify technologies, files likely affected, and which MCP servers are needed
-- Output structured JSON saved to state
 
 ```bash
 node .agent/skills/buddy/scripts/state.js update --step analyzer --status done --output '<json>'
 node .agent/skills/buddy/scripts/progress.js show
 ```
 
-### Step 2 — Enhance Prompt
+#### Step 2 — Enhance Prompt
 
 Read `agents/prompt-enhancer/SKILL.md` and execute the Prompt Enhancer role:
-
-- Use the analyzer output + raw task to build a rich, structured prompt with context, constraints, and acceptance criteria
-- Output the enhanced prompt string saved to state
 
 ```bash
 node .agent/skills/buddy/scripts/state.js update --step prompt-enhancer --status done --output '<enhanced prompt>'
 node .agent/skills/buddy/scripts/progress.js show
 ```
 
-### Step 3 — Research
+#### Step 3 — Research
 
 Read `agents/researcher/SKILL.md` and execute the Researcher role:
-
-- Study the codebase: read relevant files, understand patterns, check dependencies
-- If web search MCP is available, research external docs
-- Output a research context document with key findings
 
 ```bash
 node .agent/skills/buddy/scripts/state.js update --step researcher --status done --output '<research summary>'
 node .agent/skills/buddy/scripts/progress.js show
 ```
 
-### Step 4 — Plan
+#### Step 4 — Plan
 
 Read `agents/planner/SKILL.md` and execute the Planner role:
 
-- Create a file-by-file implementation plan with clear steps, order, and risks
-- Output a structured plan
+- Create a file-by-file implementation plan with must_haves derivation
+- Output a structured plan with truths, artifacts, and key_links
 
 ```bash
 node .agent/skills/buddy/scripts/state.js update --step planner --status done --output '<plan json>'
 node .agent/skills/buddy/scripts/progress.js show
 ```
 
-### Step 5 — Review Plan
+#### Step 5 — Verify Plan (NEW)
 
-Read `agents/reviewer/SKILL.md` and execute the Reviewer role on the **plan**:
+Read `agents/plan-verifier/SKILL.md` and execute the Plan Verifier role:
 
-- Check for logical errors, missing edge cases, alignment with task goals
+- Perform 8-dimension goal-backward verification
+- Check requirement coverage, task completeness, dependencies, key links, scope, etc.
 - Score the plan from 1-10
-- If score < 7: mark step as `needs-revision`, go back to Step 4 with feedback
-- If score ≥ 7: mark as `approved` and continue
 
 ```bash
-node .agent/skills/buddy/scripts/state.js update --step plan-reviewer --status done --output '<review json>'
+node .agent/skills/buddy/scripts/state.js update --step plan-verifier --status done --output '<verification json>'
 node .agent/skills/buddy/scripts/progress.js show
 ```
 
-### Step 6 — Develop
+**Loop 1: Plan Revision (max 3 iterations)**
+- If score < 7: Return to Step 4 (Planner) with structured issues
+- Increment iteration counter
+- If max iterations reached without approval → fail with feedback
+
+### Phase 2: Execution Loop (Per Task)
+
+For **each task** in the plan (extract from `implementation_steps`):
+
+#### Step 6a — Develop Task
 
 Read `agents/developer/SKILL.md` and execute the Developer role:
 
-- Implement the code changes following the approved plan exactly
-- Output list of files changed and a summary
+- Begin task tracking: `node .agent/skills/buddy/scripts/state.js begin-task --task task-1`
+- Implement following deviation rules (auto-fix bugs, missing functionality, blocking issues)
+- Report deviations taken
 
 ```bash
 node .agent/skills/buddy/scripts/state.js update --step developer --status done --output '<files changed json>'
 node .agent/skills/buddy/scripts/progress.js show
 ```
 
-### Step 7 — Test
+#### Step 6b — Verify Task (NEW)
 
-Read `agents/tester/SKILL.md` and execute the Tester role:
+Read `agents/verifier/SKILL.md` and execute the Verifier role:
 
-- Run existing tests, validate no regressions
-- Verify implementation against acceptance criteria
-- If tests fail: mark as `failed`, return to Step 6 (Developer) with test failure details
-- If tests pass: mark as `passed` and continue
+- Perform goal-backward verification: exists, substantive, wired
+- Check stub detection, anti-patterns
+- Verify against acceptance criteria
 
 ```bash
-node .agent/skills/buddy/scripts/state.js update --step tester --status done --output '<test results json>'
+node .agent/skills/buddy/scripts/state.js update --step verifier --status done --output '<verification json>'
+node .agent/skills/buddy/scripts/state.js update --step verifier --output '{...}'  # Update verification status
 node .agent/skills/buddy/scripts/progress.js show
 ```
 
-### Step 8 — Review Code
+**Loop 2: Task Fix (max 2 iterations)**
+- If verification fails: Return to Step 6a (Developer) with gaps
+- Auto-fix if applicable (Rules 1-3), ask user if Rule 4 (architectural)
 
-Read `agents/reviewer/SKILL.md` and execute the Reviewer role on the **code changes**:
+#### Step 6c — Atomic Commit (NEW)
 
-- Review the implemented code for quality, correctness, and alignment with the plan
+Read `agents/git-agent/SKILL.md` and execute the Git Agent atomic-commit role:
+
+- Stage only this task's files (NEVER `git add .`)
+- Commit with semantic type
+- Record commit hash
+
+```bash
+node .agent/skills/buddy/scripts/state.js update --step git-agent --status done --output '<commit json>'
+node .agent/skills/buddy/scripts/progress.js show
+```
+
+Mark task complete:
+```bash
+node .agent/skills/buddy/scripts/state.js complete-task --task task-1 --commit abc1234 --verified true --score 8
+```
+
+#### Step 6d — Review Task
+
+Read `agents/reviewer/SKILL.md` and execute the Reviewer role on the **code**:
+
+- Perform dimensional review
 - Score from 1-10
-- If score < 7: mark as `needs-revision`, return to Step 6 (Developer) with feedback
-- If score ≥ 7: mark as `approved`
 
 ```bash
 node .agent/skills/buddy/scripts/state.js update --step code-reviewer --status done --output '<review json>'
 node .agent/skills/buddy/scripts/progress.js show
 ```
 
-### Step 9 — Lint & Auto-Fix
+**Loop 3: Code Revision (max 2 iterations)**
+- If score < 7: Return to Step 6a (Developer) with feedback
+- Keep previous commit, create new commit after fixes
 
-Read `agents/git-agent/SKILL.md` and execute the Git Agent role for linting:
+### Phase 3: Integration & Finalization
 
-- Run the project's linter (e.g., `npx eslint . --fix`).
-- If linting fails with unfixable errors: mark as `needs-revision`, return to Step 6 (Developer) with the linter output.
-- If linting passes or was auto-fixed successfully: mark as `approved`.
+#### Step 7 — Integration Check (NEW)
+
+Read `agents/integration-checker/SKILL.md` and execute the Integration Checker role:
+
+- Verify cross-component wiring (exports/imports, API coverage)
+- Check E2E flows
+- Verify auth protection
 
 ```bash
-node .agent/skills/buddy/scripts/state.js update --step git-agent-lint --status done --output '<lint results json>'
+node .agent/skills/buddy/scripts/state.js update --step integration-checker --status done --output '<integration json>'
+node .agent/skills/buddy/scripts/state.js update-verification --type integration --status passed
 node .agent/skills/buddy/scripts/progress.js show
 ```
 
-### Step 10 — Commit, Push & PR
+**Loop 4: Gap Closure (max 2 iterations)**
+- If gaps found: Create targeted fix tasks
+- Return to Phase 2 for specific fixes only
 
-Read `agents/git-agent/SKILL.md` and execute the Git Agent role for finishing the task:
+#### Step 8 — Test
 
-- Stage, commit, and push all changes for the current branch.
-- Use **GitHub MCP** to create a Pull Request to `dev`.
+Read `agents/tester/SKILL.md` and execute the Tester role:
 
 ```bash
-node .agent/skills/buddy/scripts/state.js update --step git-agent-pr --status done --output '<pr link and summary json>'
+node .agent/skills/buddy/scripts/state.js update --step tester --status done --output '<test results json>'
+node .agent/skills/buddy/scripts/progress.js show
+```
+
+#### Step 9 — Lint & Auto-Fix
+
+Read `agents/git-agent/SKILL.md` and execute the Git Agent linting role:
+
+```bash
+node .agent/skills/buddy/scripts/state.js update --step lint-and-fix --status done --output '<lint results json>'
+node .agent/skills/buddy/scripts/progress.js show
+```
+
+#### Step 10 — Create PR
+
+Read `agents/git-agent/SKILL.md` and execute the Git Agent create-pr role:
+
+- Push all commits (already committed per task)
+- Create PR with comprehensive body (commits, verification results, deviations)
+
+```bash
+node .agent/skills/buddy/scripts/state.js update --step git-agent --status done --output '<pr json>'
 ```
 
 Mark the run as complete:
@@ -204,9 +250,11 @@ node .agent/skills/buddy/scripts/progress.js show
 
 Present a final summary to the user:
 
-- ✅ What was accomplished
+- ✅ Tasks completed
+- 🔢 Commits created
 - 📁 Files changed
 - 🧪 Test results
+- ✅ Verification scores (plan, code, integration)
 - 🔀 PR link
 - 📋 Linear issue updated (if applicable)
 
@@ -214,9 +262,20 @@ Present a final summary to the user:
 
 ## Loop Behavior
 
-- Maximum **10 iterations** across all retries combined
-- If max iterations reached without completion, report partial progress and ask user what to do next
-- Always resume from the last completed step if restarted (check `.buddy/state.json`)
+The enhanced Buddy workflow has **four distinct iteration loops**:
+
+| Loop | Trigger | Max Iterations | Purpose |
+|------|---------|----------------|---------|
+| **Plan Revision** | Plan verification score < 7 | 3 | Improve plan before execution |
+| **Task Fix** | Verification finds gaps | 2 | Fix issues within current task |
+| **Code Revision** | Code review score < 7 | 2 | Address review feedback |
+| **Gap Closure** | Integration check finds gaps | 2 | Fix cross-component issues |
+
+**Overall limit**: Maximum **10 iterations** across all loops combined
+
+If max iterations reached without completion, report partial progress and ask user what to do next.
+
+**Resume behavior**: Always resume from the last completed step if restarted (check `.buddy/state.json`)
 
 ## Resume
 
@@ -240,14 +299,17 @@ Read each sub-skill file before executing that role — do not rely on memory al
 
 ## Available Sub-Skills
 
-| Role            | Path                              | Purpose                   |
-| --------------- | --------------------------------- | ------------------------- |
-| Linear Reader   | `agents/linear-reader/SKILL.md`   | Fetch & list Linear tasks |
-| Analyzer        | `agents/analyzer/SKILL.md`        | Task decomposition        |
-| Prompt Enhancer | `agents/prompt-enhancer/SKILL.md` | Build rich prompt         |
-| Researcher      | `agents/researcher/SKILL.md`      | Codebase & docs research  |
-| Planner         | `agents/planner/SKILL.md`         | Implementation plan       |
-| Reviewer        | `agents/reviewer/SKILL.md`        | Plan & code quality gate  |
-| Developer       | `agents/developer/SKILL.md`       | Code implementation       |
-| Tester          | `agents/tester/SKILL.md`          | Testing & validation      |
-| Git Agent       | `agents/git-agent/SKILL.md`       | Branching, Linting & PRs  |
+| Role                | Path                                  | Purpose                               |
+| ------------------- | ------------------------------------- | ------------------------------------- |
+| Linear Reader       | `agents/linear-reader/SKILL.md`       | Fetch & list Linear tasks             |
+| Analyzer            | `agents/analyzer/SKILL.md`            | Task decomposition                    |
+| Prompt Enhancer     | `agents/prompt-enhancer/SKILL.md`     | Build rich prompt                     |
+| Researcher          | `agents/researcher/SKILL.md`          | Codebase & docs research              |
+| Planner             | `agents/planner/SKILL.md`             | Implementation plan with must_haves   |
+| **Plan Verifier**   | `agents/plan-verifier/SKILL.md`       | **8-dimension plan verification**     |
+| Developer           | `agents/developer/SKILL.md`           | Code implementation with deviation rules |
+| **Verifier**        | `agents/verifier/SKILL.md`            | **Goal-backward code verification**   |
+| Reviewer            | `agents/reviewer/SKILL.md`            | Dimensional plan & code review        |
+| **Integration Checker** | `agents/integration-checker/SKILL.md` | **Cross-component wiring verification** |
+| Tester              | `agents/tester/SKILL.md`              | Testing & validation                  |
+| Git Agent           | `agents/git-agent/SKILL.md`           | Branching, atomic commits & PRs       |
