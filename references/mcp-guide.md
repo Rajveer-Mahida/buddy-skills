@@ -84,7 +84,7 @@ Used by: State manager (cross-session persistence fallback)
 
 Used by: Tester agent (UI/frontend tasks)
 
-**When Buddy uses it:** If `task_type` is `frontend` or `fullstack` and `playwright` is in `mcps_needed`.
+**When Buddy uses it:** If `task_type` is `frontend` or `fullstack`. For UI-related changes, Playwright validation is required before marking tests as passed.
 
 **Setup:**
 

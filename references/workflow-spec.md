@@ -13,7 +13,7 @@ User: "Hey Buddy, <task>"
   ├─ 5. Review Plan    → Quality gate (score ≥ 7 to pass)
   │     └─ if rejected → return to Step 4 with feedback
   ├─ 6. Develop        → Implement the code
-  ├─ 7. Test           → Run test suite + verify acceptance criteria
+  ├─ 7. Test           → Run test suite + verify acceptance criteria (+ Playwright browser checks for UI tasks)
   │     └─ if failed   → return to Step 6 with test failures
   ├─ 8. Review Code    → Quality gate (score ≥ 7 to pass)
   │     └─ if rejected → return to Step 6 with review feedback

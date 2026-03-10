@@ -216,6 +216,8 @@ node .agent/skills/buddy/scripts/progress.js show
 
 Read `agents/tester/SKILL.md` and execute the Tester role:
 
+- For UI/frontend/fullstack changes, run browser validation with Playwright MCP (not only unit/integration CLI tests).
+
 ```bash
 node .agent/skills/buddy/scripts/state.js update --step tester --status done --output '<test results json>'
 node .agent/skills/buddy/scripts/progress.js show
