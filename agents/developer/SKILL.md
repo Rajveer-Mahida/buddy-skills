@@ -27,6 +27,18 @@ node .agent/skills/buddy/scripts/state.js get --step researcher
 node .agent/skills/buddy/scripts/state.js get --step prompt-enhancer
 ```
 
+**Also read persistent documentation (if exists):**
+```bash
+# Read coding standards to follow
+cat CODING_STANDARDS.md
+
+# Read codebase map for file relationships
+cat CODEBASE_MAP.md
+
+# Read architecture for context
+cat ARCHITECTURE.md
+```
+
 If this is a **revision** from the Tester or Code Reviewer, also get their feedback:
 
 ```bash
@@ -64,6 +76,18 @@ This tracks the current task and enables deviation tracking.
 node .agent/skills/buddy/scripts/state.js get --step planner
 node .agent/skills/buddy/scripts/state.js get --step researcher
 node .agent/skills/buddy/scripts/state.js get --step prompt-enhancer
+```
+
+**Also read persistent documentation (if exists):**
+```bash
+# Read coding standards to follow
+cat CODING_STANDARDS.md
+
+# Read codebase map for file relationships
+cat CODEBASE_MAP.md
+
+# Read architecture for context
+cat ARCHITECTURE.md
 ```
 
 If this is a **revision** from the Verifier or Code Reviewer, also get their feedback:
@@ -117,11 +141,22 @@ Follow the `implementation_steps` from the Planner's output **in order**. For ea
 ### 4. Implementation Principles
 
 - **Stick to the plan**: do not deviate from the approved plan unless you hit a genuine blocker
-- **Follow conventions**: match existing code style (quotes, spacing, naming, imports order)
+- **Follow CODING_STANDARDS.md**: read `CODING_STANDARDS.md` if it exists and follow the documented conventions
+- **Match existing patterns**: when standards don't cover something, match the existing codebase style
 - **Handle errors**: every async operation needs error handling; every edge case the plan identified must be addressed
 - **Write clean code**: meaningful variable names, single-responsibility functions, no magic numbers
 - **No scope creep**: do not fix unrelated issues you notice during implementation
 - **Atomic changes**: each logical unit should be independently commit-able
+
+**Coding Standards Checklist:**
+Before writing code, check `CODING_STANDARDS.md` for:
+- ✓ File naming conventions
+- ✓ Code style (indentation, quotes, semicolons)
+- ✓ Import order and style
+- ✓ Component/function structure
+- ✓ Error handling patterns
+- ✓ Testing conventions
+- ✓ Commit message format
 
 ### 5. Atomic Commit Protocol
 
@@ -155,7 +190,57 @@ node .agent/skills/buddy/scripts/state.js add-commit --hash $TASK_COMMIT
 | Refactoring | `refactor` | `refactor(LIN-42): extract auth logic` |
 | Config/infrastructure | `chore` | `chore(LIN-42): update dependencies` |
 
-### 6. TDD Execution Pattern (Optional)
+### 6. Update AGENTS.md (NEW)
+
+**IMPORTANT:** After each atomic commit, you MUST update `AGENTS.md` to track your work.
+
+#### If AGENTS.md doesn't exist:
+
+Create it using the template from `.agent/skills/buddy/AGENTS.md`
+
+#### If AGENTS.md exists:
+
+Update these sections:
+
+1. **Last Updated** - Set current date and run info
+2. **Recent Activity Log** - Add new entry for this task
+3. **Files Changed** - Add table entry for each file changed
+4. **Statistics** - Update counters
+
+Example update format:
+
+```markdown
+### Run: run_abc123 - Add user authentication
+**Date:** 2026-03-10T14:30:00Z
+**Issue:** LIN-42
+**Branch:** linear/LIN-42
+**Status:** completed
+
+#### Agents Used
+- Analyzer, Researcher, Planner, Developer, Verifier, Git Agent
+
+#### Files Changed
+| File | Action | Agent | Commit |
+|------|--------|-------|--------|
+| `src/api/auth.ts` | created | Developer | abc1234 |
+| `src/types/user.ts` | modified | Developer | abc1234 |
+```
+
+**Commands to update AGENTS.md:**
+
+```bash
+# Read current AGENTS.md
+cat AGENTS.md
+
+# Generate update for this task
+# Get current run info
+RUN_INFO=$(node .agent/skills/buddy/scripts/state.js get)
+
+# Update AGENTS.md with new activity entry
+# (Use Edit tool to modify specific sections)
+```
+
+### 7. TDD Execution Pattern (Optional)
 
 If the plan specifies TDD approach, follow RED-GREEN-REFACTOR:
 
@@ -165,7 +250,7 @@ If the plan specifies TDD approach, follow RED-GREEN-REFACTOR:
 
 Each phase gets its own atomic commit.
 
-### 4. If You Hit a Blocker
+### 7. If You Hit a Blocker
 
 If you encounter something not covered by the plan (e.g., a missing dependency, an unexpected API shape, a type conflict):
 
@@ -173,7 +258,7 @@ If you encounter something not covered by the plan (e.g., a missing dependency, 
 2. Make a safe, minimal decision and note it as a deviation
 3. List it in your output so the Reviewer can assess it
 
-### 7. Output Format (UPDATED)
+### 8. Output Format (UPDATED)
 
 ```json
 {
@@ -196,7 +281,7 @@ If you encounter something not covered by the plan (e.g., a missing dependency, 
 }
 ```
 
-### 8. Complete Task & Report
+### 9. Complete Task & Report
 
 ```bash
 # Mark task as complete (after verification passes)

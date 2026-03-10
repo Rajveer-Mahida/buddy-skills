@@ -123,6 +123,38 @@ This state is preserved across daemon restarts.
 
 Follow these steps **in order**. After each step, call `node .agent/skills/buddy/scripts/state.js update` to save progress, then call `node .agent/skills/buddy/scripts/progress.js show` and display the output to the user.
 
+### Phase 0: Codebase Context (NEW)
+
+#### Step -1 — Codebase Mapping
+
+**First time OR when project structure changed**: Read `agents/codebase-mapper/SKILL.md` and execute the Codebase Mapper role.
+
+The Codebase Mapper creates and maintains three persistent documentation files:
+
+| File | Purpose |
+|------|---------|
+| `ARCHITECTURE.md` | Project structure, tech stack, key decisions, data flow |
+| `CODING_STANDARDS.md` | Naming conventions, code style, patterns to follow |
+| `CODEBASE_MAP.md` | File relationships, API routes, component hierarchy |
+
+```bash
+# Check if documentation exists
+ls ARCHITECTURE.md CODING_STANDARDS.md CODEBASE_MAP.md
+
+# If missing or outdated, run codebase mapper
+node .agent/skills/buddy/scripts/state.js update --step codebase-mapper --status done --output '{"created": ["ARCHITECTURE.md", "CODING_STANDARDS.md", "CODEBASE_MAP.md"]}'
+```
+
+**Why this matters:**
+- Persistent documentation means faster context loading for future tasks
+- Developer agent follows documented coding standards
+- Consistent code style across all changes
+- New team members get up to speed quickly
+
+**When to skip:**
+- If all three files exist and were updated recently (within last 7 days)
+- If user says "skip mapping" or provides a task to work on immediately
+
 ### Phase 1: Preparation
 
 #### Step 0 — Initialize & Branch Setup
@@ -392,6 +424,7 @@ Read each sub-skill file before executing that role — do not rely on memory al
 
 | Role                | Path                                  | Purpose                               |
 | ------------------- | ------------------------------------- | ------------------------------------- |
+| **Codebase Mapper** | `agents/codebase-mapper/SKILL.md`     | **Project documentation & standards** |
 | **Linear Watcher**  | `agents/linear-watcher/SKILL.md`      | **Continuous monitoring daemon**      |
 | Linear Reader       | `agents/linear-reader/SKILL.md`       | Fetch & list Linear tasks             |
 | Analyzer            | `agents/analyzer/SKILL.md`            | Task decomposition                    |

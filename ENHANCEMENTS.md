@@ -1,19 +1,41 @@
 # Buddy Skills Enhancement Summary
 
-**Date:** 2026-03-09
+**Date:** 2026-03-10
 **Inspired by:** Groovy Skills patterns
 
 ---
 
 ## Overview
 
-Enhanced the Buddy multi-agent orchestrator with comprehensive verification, atomic commits, and iterative improvement loops from Groovy Skills patterns.
+Enhanced the Buddy multi-agent orchestrator with comprehensive verification, atomic commits, iterative improvement loops, persistent project documentation, and automatic activity tracking.
 
 ---
 
 ## New Agents Created
 
-### 1. Plan Verifier (`agents/plan-verifier/SKILL.md`)
+### 1. Codebase Mapper (`agents/codebase-mapper/SKILL.md`) ⭐ NEW
+**Purpose:** Creates and maintains persistent project documentation
+
+**Documentation Files Created:**
+- `ARCHITECTURE.md` - Project structure, tech stack, key decisions, data flow
+- `CODING_STANDARDS.md` - Naming conventions, code style, patterns to follow
+- `CODEBASE_MAP.md` - File relationships, API routes, component hierarchy
+
+**Workflow Integration:**
+- Runs as **Step -1** (before analysis)
+- Skipped if docs exist and are recent (within 7 days)
+- Developer agent reads these files before writing code
+
+### 2. Linear Watcher (`agents/linear-watcher/SKILL.md`) ⭐ NEW
+**Purpose:** Continuous monitoring of Linear issues via MCP
+
+**Features:**
+- Uses Linear MCP tools (no direct API calls)
+- Tracks seen issues in `.buddy/watcher-state.json`
+- Two modes: Prompt (ask user) or Auto (work through all)
+- Runs within agent context (not a background daemon)
+
+### 3. Plan Verifier (`agents/plan-verifier/SKILL.md`)
 **Purpose:** 8-dimension goal-backward plan verification before execution
 
 **Verification Dimensions:**
@@ -151,15 +173,18 @@ For each task:
 ## File Changes Summary
 
 **Created:**
-- `agents/plan-verifier/SKILL.md`
-- `agents/verifier/SKILL.md`
-- `agents/integration-checker/SKILL.md`
+- `agents/codebase-mapper/SKILL.md` - Persistent project documentation agent ⭐ NEW
+- `agents/linear-watcher/SKILL.md` - Continuous Linear monitoring via MCP ⭐ NEW
+- `agents/plan-verifier/SKILL.md` - 8-dimension plan verification
+- `agents/verifier/SKILL.md` - Goal-backward code verification
+- `agents/integration-checker/SKILL.md` - Cross-component wiring verification
+- `AGENTS.md` - Auto-updated activity log ⭐ NEW
 
 **Modified:**
-- `SKILL.md` - Main orchestrator workflow
+- `SKILL.md` - Main orchestrator workflow with Step -1 (Codebase Mapper)
 - `scripts/state.js` - Task-level tracking
 - `scripts/progress.js` - Task progress display
-- `agents/developer/SKILL.md` - Deviation rules
+- `agents/developer/SKILL.md` - Deviation rules + AGENTS.md auto-update ⭐ NEW
 - `agents/git-agent/SKILL.md` - Atomic commits
 - `agents/reviewer/SKILL.md` - Dimensional review
 - `agents/planner/SKILL.md` - must_haves derivation
@@ -168,24 +193,30 @@ For each task:
 
 ## Key Improvements
 
-1. **Verification-Driven:** Plans and code are verified before proceeding
-2. **Atomic Commits:** One commit per task, not bulk at end
-3. **Iterative Loops:** Multiple specific loops for different failure types
-4. **Goal-Backward:** Start from observable truths, verify artifacts achieve them
-5. **Deviation Handling:** Auto-fix common issues, ask for architectural changes
-6. **State Tracking:** Task-level, verification, and commit tracking
-7. **Enhanced PR:** Comprehensive PR body with verification results
+1. **Persistent Documentation:** `ARCHITECTURE.md`, `CODING_STANDARDS.md`, `CODEBASE_MAP.md` created and maintained ⭐ NEW
+2. **Auto Activity Tracking:** `AGENTS.md` automatically updated with each change ⭐ NEW
+3. **Linear Integration:** Continuous monitoring via MCP tools ⭐ NEW
+4. **Verification-Driven:** Plans and code are verified before proceeding
+5. **Atomic Commits:** One commit per task, not bulk at end
+6. **Iterative Loops:** Multiple specific loops for different failure types
+7. **Goal-Backward:** Start from observable truths, verify artifacts achieve them
+8. **Deviation Handling:** Auto-fix common issues, ask for architectural changes
+9. **State Tracking:** Task-level, verification, and commit tracking
+10. **Enhanced PR:** Comprehensive PR body with verification results
 
 ---
 
 ## Usage
 
 Invoke Buddy as before. The enhanced workflow will:
+
+0. **Step -1:** Create/update project documentation (first time or when changed)
 1. Verify plans before execution
 2. Verify code after each task
 3. Commit atomically per task
-4. Review with dimensional criteria
-5. Check integration before final testing
-6. Create comprehensive PRs
+4. Update `AGENTS.md` with activity log ⭐ NEW
+5. Review with dimensional criteria
+6. Check integration before final testing
+7. Create comprehensive PRs
 
 No command-line changes needed - all enhancements are internal to the agents.
