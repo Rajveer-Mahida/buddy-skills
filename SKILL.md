@@ -167,7 +167,7 @@ Read `agents/git-agent/SKILL.md` and execute the Git Agent atomic-commit role:
 - Record commit hash
 
 ```bash
-node .agent/skills/buddy/scripts/state.js update --step git-agent --status done --output '<commit json>'
+node .agent/skills/buddy/scripts/state.js update --step task-commit --status done --output '<commit json>'
 node .agent/skills/buddy/scripts/progress.js show
 ```
 
@@ -240,6 +240,15 @@ Read `agents/git-agent/SKILL.md` and execute the Git Agent create-pr role:
 ```bash
 node .agent/skills/buddy/scripts/state.js update --step git-agent --status done --output '<pr json>'
 ```
+
+#### Step 11 — Update Linear Issue to Done
+
+If this run is linked to a Linear issue (`linear_issue_id` exists), update that issue status to **Done** using Linear MCP before closing the run.
+
+Example:
+- `mcp__linear__save_issue` with:
+  - `id: <ISSUE-ID>`
+  - `state: "Done"`
 
 Mark the run as complete:
 

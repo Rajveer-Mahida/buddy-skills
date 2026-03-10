@@ -32,6 +32,7 @@ const STEPS = [
   'plan-verifier',      // NEW: 8-dimension plan verification
   'developer',
   'verifier',           // NEW: Goal-backward code verification
+  'task-commit',        // NEW: Per-task atomic commit (separate from final git-agent/PR step)
   'code-reviewer',
   'integration-checker', // NEW: Cross-component wiring verification
   'tester',
@@ -113,7 +114,7 @@ function cmdInit(args) {
     linear_issue_id: args['issue-id'] || null,
     branch: args.branch || null,
     status: 'running',
-    current_step: 'analyzer',
+    current_step: 'initialize-branch',
     current_task: null,        // NEW: Track current task within step
     iteration: 1,
     max_iterations: 10,
@@ -172,9 +173,9 @@ function cmdUpdate(args) {
     updated_at: now(),
   };
 
-  // Advance current step
+  // Advance current step only for known ordered steps.
   const stepIdx = STEPS.indexOf(step);
-  if (status === 'done' && stepIdx < STEPS.length - 1) {
+  if (status === 'done' && stepIdx !== -1 && stepIdx < STEPS.length - 1) {
     state.current_step = STEPS[stepIdx + 1];
   } else if (status === 'done' && stepIdx === STEPS.length - 1) {
     state.current_step = 'complete';

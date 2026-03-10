@@ -31,7 +31,7 @@ When called for `step: initialize-branch`:
 
 ### Phase 2: Step 6c (Atomic Commit) — NEW
 
-When called for `step: atomic-commit`:
+When called for `step: task-commit`:
 1. Get the task files from the developer output
 2. Stage only the files for this task (NEVER `git add .`):
    ```bash
@@ -142,7 +142,12 @@ When called for `step: create-pr`:
 After completing your designated phase, save your output to the Buddy state manager:
 
 ```bash
-node .agent/skills/buddy/scripts/state.js update --step git-agent --status done --output '<your json response detailing actions taken>'
+# For Step 6c (per-task atomic commit):
+node .agent/skills/buddy/scripts/state.js update --step task-commit --status done --output '<commit json>'
+
+# For Step 10 (final PR creation):
+node .agent/skills/buddy/scripts/state.js update --step git-agent --status done --output '<pr json>'
+
 node .agent/skills/buddy/scripts/progress.js show
 ```
 

@@ -17,7 +17,7 @@ User: "Hey Buddy, <task>"
   │     └─ if failed   → return to Step 6 with test failures
   ├─ 8. Review Code    → Quality gate (score ≥ 7 to pass)
   │     └─ if rejected → return to Step 6 with review feedback
-  └─ 9. Complete       → Report results to user
+  └─ 9. Complete       → Update Linear to Done (if linked) + report results to user
 ```
 
 ## Loop Control

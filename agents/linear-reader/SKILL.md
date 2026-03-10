@@ -116,7 +116,9 @@ node .agent/skills/buddy/scripts/git-ops.js setup --issue-id <ISSUE-ID> --base d
 node .agent/skills/buddy/scripts/state.js init --task "<task string>" --issue-id <ISSUE-ID> --branch linear/<ISSUE-ID>
 ```
 
-Then continue with the normal orchestrator workflow (Steps 1-9 from SKILL.md).
+Then continue with the normal orchestrator workflow (full workflow in `SKILL.md`, including final Linear `Done` update).
+
+Important: the orchestrator must set the Linear issue to **Done** at final completion (after PR/test/lint steps), not in this reader step.
 
 ### 7. Error Handling
 

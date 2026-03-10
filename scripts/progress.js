@@ -21,6 +21,7 @@ const STEP_LABELS = {
     'plan-verifier': 'Verify Plan',
     'developer': 'Develop',
     'verifier': 'Verify Code',
+    'task-commit': 'Task Commit',
     'code-reviewer': 'Review Code',
     'integration-checker': 'Check Integration',
     'tester': 'Test',

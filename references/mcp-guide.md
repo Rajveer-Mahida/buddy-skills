@@ -37,7 +37,7 @@ Used by: `agents/linear-reader/SKILL.md` (task listing + details)
 
 - `listIssues` — filter by assignee, team, status
 - `getIssue` — full issue details (description, comments, labels)
-- `updateIssue` — set status to "In Progress"
+- `save_issue` / `updateIssue` — set status to "In Progress" at start and "Done" at completion
 
 ### GitHub MCP
 

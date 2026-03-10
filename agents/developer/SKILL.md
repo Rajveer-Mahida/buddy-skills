@@ -123,7 +123,7 @@ Follow the `implementation_steps` from the Planner's output **in order**. For ea
 - **No scope creep**: do not fix unrelated issues you notice during implementation
 - **Atomic changes**: each logical unit should be independently commit-able
 
-### 5. Atomic Commit Protocol (NEW)
+### 5. Atomic Commit Protocol
 
 After completing each task, prepare for atomic commit:
 
