@@ -52,8 +52,8 @@ check('Git repo', () => {
 });
 
 // ── Optional (MCP stubs — Phase 3) ───────────────────────────────────────────
-warn('Linear MCP', () => {
-    if (!process.env.LINEAR_API_KEY) throw new Error('LINEAR_API_KEY not set in .env (needed for Phase 2)');
+warn('Linear API Key', () => {
+    if (!process.env.LINEAR_API_KEY) throw new Error('LINEAR_API_KEY not set in .env (needed for Linear integration). Get it from https://linear.app/settings/api');
     return 'LINEAR_API_KEY found';
 });
 

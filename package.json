@@ -11,7 +11,7 @@
     "state": "node scripts/state.js",
     "progress": "node scripts/progress.js show"
   },
-  "keywords": ["agent-skills", "multi-agent", "orchestrator", "ai", "workflow", "buddy"],
+  "keywords": ["agent-skills", "multi-agent", "orchestrator", "ai", "workflow", "buddy", "linear", "mcp"],
   "license": "MIT",
   "engines": {
     "node": ">=18.0.0"

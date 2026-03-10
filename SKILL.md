@@ -1,6 +1,6 @@
 ---
 name: buddy
-description: Multi-agent workflow orchestrator for software projects. Invoke when the user says "Hey Buddy", asks to work on a task, wants to check Linear tasks, or needs a full develop-test-review cycle on any software change. Orchestrates specialized agent roles in a loop until the task is complete.
+description: Multi-agent workflow orchestrator for software projects. Invoke when the user says "Hey Buddy", asks to work on a task, wants to check Linear tasks, start continuous monitoring for new issues, or needs a full develop-test-review cycle on any software change. Orchestrates specialized agent roles in a loop until the task is complete.
 ---
 
 # 🤖 Buddy — Multi-Agent Workflow Orchestrator
@@ -19,6 +19,7 @@ You are Buddy, a multi-agent workflow orchestrator. When invoked, you coordinate
 
 - User says "Hey Buddy" followed by a task or question
 - User asks to check tasks / work on a Linear task
+- User wants to start continuous monitoring ("start watching", "enable continuous mode", "work on all issues")
 - User wants a full analyze → plan → develop → test cycle
 - User wants to create a PR to the dev branch
 
@@ -38,6 +39,85 @@ If the user asks to check tasks, list tasks, or pick a task:
 8. Continue to Step 0 below with `--issue-id` and `--branch` flags
 
 If the user provides a task directly (without Linear), skip this section entirely.
+
+---
+
+## Continuous Watcher Mode: "Hey Buddy, start watching"
+
+If the user asks to start continuous/automated mode (e.g., "start watching", "enable continuous mode", "work on all issues"):
+
+### How the Watcher Works
+
+**Important**: The watcher runs **within the agent context**, not as a separate daemon. When invoked:
+1. Read `agents/linear-watcher/SKILL.md` and follow those instructions
+2. Use **Linear MCP tools** to fetch and manage issues
+3. Track seen issues in `.buddy/watcher-state.json`
+4. The user invokes you repeatedly (you set reminders for next check)
+
+### Linear MCP Tools Used
+
+| MCP Tool | Purpose |
+|----------|---------|
+| `mcp__linear__search_issues` | Search/filter issues by assignee, status, etc. |
+| `mcp__linear__get_issue` | Get full issue details by ID |
+| `mcp__linear__update_issue` | Update issue status, title, description |
+| `mcp__linear__create_comment` | Add comments to issues |
+
+### Watcher Behavior
+
+When the watcher is invoked:
+
+1. **Load state** from `.buddy/watcher-state.json` (or create new)
+2. **Use MCP** to fetch assigned issues via `mcp__linear__search_issues`
+3. **Filter out seen issues** using the `seen_issues` list
+4. **Present new issues** to the user based on current mode
+5. **Work on issues** per user preference (single or automated mode)
+6. **Save state** with updated `seen_issues`
+7. **Remind user** when to check again (e.g., "Check again in 5 minutes")
+
+### Watcher Modes
+
+- **Prompt Mode**: Ask user before working on each issue
+- **Auto Mode**: Automatically work through all issues by priority
+
+### Example Interaction
+
+```
+User: "Hey Buddy, start watching Linear in auto mode"
+
+Buddy:
+1. Loads/creates .buddy/watcher-state.json
+2. Uses mcp__linear__search_issues to get assigned issues
+3. Filters out already-seen issues
+4. Works through new issues by priority:
+   - Updates status to In Progress via mcp__linear__update_issue
+   - Runs full Buddy workflow (Step 0 → Step 11)
+   - Updates status to Done on completion
+5. Saves state after each issue
+6. Reports: "Completed 3 issues. 2 more in queue. Say 'check Linear' to continue."
+```
+
+### State Persistence
+
+The watcher maintains state in `.buddy/watcher-state.json`:
+
+```json
+{
+  "started_at": "2026-03-10T10:00:00Z",
+  "last_check": "2026-03-10T10:30:00Z",
+  "seen_issues": ["LIN-42", "LIN-58"],
+  "completed_issues": ["LIN-42"],
+  "failed_issues": [],
+  "current_mode": "auto",
+  "check_interval_seconds": 300,
+  "current_issue": null,
+  "queue": []
+}
+```
+
+This state is preserved across daemon restarts.
+
+---
 
 ## Orchestration Workflow
 
@@ -312,6 +392,7 @@ Read each sub-skill file before executing that role — do not rely on memory al
 
 | Role                | Path                                  | Purpose                               |
 | ------------------- | ------------------------------------- | ------------------------------------- |
+| **Linear Watcher**  | `agents/linear-watcher/SKILL.md`      | **Continuous monitoring daemon**      |
 | Linear Reader       | `agents/linear-reader/SKILL.md`       | Fetch & list Linear tasks             |
 | Analyzer            | `agents/analyzer/SKILL.md`            | Task decomposition                    |
 | Prompt Enhancer     | `agents/prompt-enhancer/SKILL.md`     | Build rich prompt                     |
